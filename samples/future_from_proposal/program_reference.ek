@@ -1,0 +1,19 @@
+// Reference only — NOT valid for current ekker_lang1 parser.
+// Split into real samples as you add grammar (from Compiler Design Project Idea.pdf).
+
+// Sensitive exposure (lex-style checks in compiler/ekker.l)
+// show password;
+
+// Array bounds (when arrays exist)
+// number arr[10];
+// arr[11] = 5;
+
+// Infinite loop (when repeat exists)
+// repeat(true);
+
+// Dead code (when give/return exists)
+// give x;
+// x = 20;
+
+// Division by zero expression (when parser allows)
+// y = y / 0;

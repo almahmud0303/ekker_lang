@@ -75,6 +75,10 @@ On plain **cmd.exe**, use `del` instead of `rm` if you are not using a Unix-like
 
 Git metadata lives in `.git/`; add a `.gitignore` for `lex.yy.c`, `parser.tab.c`, `parser.tab.h`, and the compiled executable when you are ready.
 
+## Sample programs
+
+The **`samples/`** directory groups test inputs by theme (matching **`compiler Design Project Idea.pdf`**: uninitialized use, sensitive exposure, division by zero, etc.). See **`samples/README.md`** for the index and what the **current** grammar can run vs **future** targets.
+
 ## See also
 
 Parent folder **`BEGINNER_PROJECT_GUIDE.md`** — project structure, Makefile template, and rubric alignment with `index.pdf`.

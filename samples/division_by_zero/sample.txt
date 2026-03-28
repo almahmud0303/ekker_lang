@@ -1,0 +1,3 @@
+number x;
+x = 10 / 0;
+show(x);

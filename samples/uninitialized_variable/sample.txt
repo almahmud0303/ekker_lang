@@ -1,0 +1,2 @@
+number u;
+show(u);
