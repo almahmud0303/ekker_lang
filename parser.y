@@ -27,6 +27,7 @@ int yylex();
 
 %left PLUS MINUS
 %left MUL DIV
+%nonassoc EQ NEQ GT LT GTE LTE
 
 %%
 
@@ -43,6 +44,21 @@ statement:
       declaration ';'
     | assignment ';'
     | print_stmt ';'
+    | while_stmt
+;
+
+while_stmt:
+    WHILE '(' expression ')' block opt_semi
+;
+
+opt_semi:
+    ';'
+    |
+;
+
+block:
+    '{' statements '}'
+    | '{' '}'
 ;
 
 declaration:
@@ -81,8 +97,16 @@ expression:
     | expression MINUS expression
     | expression MUL expression
     | expression DIV div_rhs
+    | expression EQ expression
+    | expression NEQ expression
+    | expression GT expression
+    | expression LT expression
+    | expression GTE expression
+    | expression LTE expression
     | NUMBER
     | ID
+    | KW_TRUE
+    | KW_FALSE
 ;
 
 div_rhs:
