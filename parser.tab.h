@@ -32,6 +32,17 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+/* "%code requires" blocks.  */
+
+/* Line 1676 of yacc.c  */
+#line 14 "parser.y"
+
+    #include "ast.h"
+
+
+
+/* Line 1676 of yacc.c  */
+#line 46 "parser.tab.h"
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -39,30 +50,34 @@
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     TYPE_INT = 258,
-     TYPE_FLOAT = 259,
-     PRINT = 260,
-     IF = 261,
-     ELSE = 262,
+     TOK_TYPE_INT = 258,
+     TOK_TYPE_FLOAT = 259,
+     TOK_TYPE_CHAR = 260,
+     TOK_TYPE_STRING = 261,
+     PRINT = 262,
      WHILE = 263,
      RETURN = 264,
-     MAIN = 265,
-     SENSITIVE = 266,
-     KW_TRUE = 267,
-     KW_FALSE = 268,
-     PLUS = 269,
-     MINUS = 270,
-     MUL = 271,
-     DIV = 272,
-     ASSIGN = 273,
-     EQ = 274,
-     NEQ = 275,
-     GT = 276,
-     LT = 277,
-     GTE = 278,
-     LTE = 279,
-     NUMBER = 280,
-     ID = 281
+     DEFINE = 265,
+     START = 266,
+     IF = 267,
+     ELSE = 268,
+     SENSITIVE = 269,
+     PLUS = 270,
+     MINUS = 271,
+     MUL = 272,
+     DIV = 273,
+     ASSIGN = 274,
+     EQ = 275,
+     NEQ = 276,
+     GT = 277,
+     LT = 278,
+     GTE = 279,
+     LTE = 280,
+     NUMBER = 281,
+     BOOL_LIT = 282,
+     ID = 283,
+     CHAR_LIT = 284,
+     STRING_LIT = 285
    };
 #endif
 
@@ -73,15 +88,17 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 10 "parser.y"
+#line 18 "parser.y"
 
     int num;
-    char* str;
+    char *str;
+    Ast *node;
+    AstList *list;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 85 "parser.tab.h"
+#line 102 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

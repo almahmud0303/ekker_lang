@@ -1,29 +1,45 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "symtab.h"
+#include "ast.h"
 
 void yyerror(const char *s);
-int yylex();
+int yylex(void);
+extern int yylineno;
+
+AstList *g_top = NULL;  /* list of top-level items: funcdefs and start-block statements */
+AstList *g_start = NULL;/* statements inside start */
 %}
+
+%code requires {
+    #include "ast.h"
+}
 
 %union {
     int num;
-    char* str;
+    char *str;
+    Ast *node;
+    AstList *list;
 }
 
-/* Tokens */
-%token TYPE_INT TYPE_FLOAT
-%token PRINT IF ELSE WHILE RETURN MAIN
+%token TOK_TYPE_INT TOK_TYPE_FLOAT TOK_TYPE_CHAR TOK_TYPE_STRING
+%token PRINT WHILE RETURN DEFINE START IF ELSE
 %token SENSITIVE
-%token KW_TRUE KW_FALSE
 
 %token PLUS MINUS MUL DIV
 %token ASSIGN
 %token EQ NEQ GT LT GTE LTE
 
 %token <num> NUMBER
+%token <num> BOOL_LIT
 %token <str> ID
+%token <str> CHAR_LIT
+%token <str> STRING_LIT
+
+%type <list> toplevel_list statements opt_params opt_args
+%type <node> toplevel_item funcdef start_block statement declaration assignment print_stmt while_stmt if_stmt opt_else block return_stmt
+%type <node> expression primary nonnum_primary div_rhs opt_arr
+%type <node> type_spec
 
 %left PLUS MINUS
 %left MUL DIV
@@ -32,95 +48,169 @@ int yylex();
 %%
 
 program:
-    statements
+    toplevel_list { g_top = $1; }
 ;
 
-statements:
-    statements statement
-    | statement
+toplevel_list:
+      toplevel_list toplevel_item { $$ = list_append($1, $2); }
+    | toplevel_item               { $$ = list1($1); }
 ;
 
-statement:
-      declaration ';'
-    | assignment ';'
-    | print_stmt ';'
-    | while_stmt
+toplevel_item:
+      funcdef { $$ = $1; }
+    | start_block { $$ = $1; }
 ;
 
-while_stmt:
-    WHILE '(' expression ')' block opt_semi
+start_block:
+    START block opt_semi {
+        /* store start statements for main pipeline */
+        if ($2 && $2->kind == AST_BLOCK) g_start = $2->as.block.stmts;
+        $$ = $2;
+    }
+;
+
+funcdef:
+    DEFINE type_spec ID '(' opt_params ')' block opt_semi {
+        $$ = ast_funcdef($2->as.num.value, $3, $5, $7, yylineno);
+        free($2);
+    }
+;
+
+opt_params:
+      /* empty */ { $$ = NULL; }
+    | declaration             { $$ = list1($1); }
+    | opt_params ',' declaration { $$ = list_append($1, $3); }
+;
+
+type_spec:
+    TOK_TYPE_INT    { $$ = ast_num(TYPE_INT, yylineno); }
+  | TOK_TYPE_FLOAT  { $$ = ast_num(TYPE_FLOAT, yylineno); }
+  | TOK_TYPE_CHAR   { $$ = ast_num(TYPE_CHAR, yylineno); }
+  | TOK_TYPE_STRING { $$ = ast_num(TYPE_STRING, yylineno); }
 ;
 
 opt_semi:
     ';'
-    |
+  | /* empty */
 ;
 
 block:
-    '{' statements '}'
-    | '{' '}'
+    '{' statements '}' { $$ = ast_block($2, yylineno); }
+  | '{' '}'            { $$ = ast_block(NULL, yylineno); }
+;
+
+statements:
+      statements statement { $$ = list_append($1, $2); }
+    | statement            { $$ = list1($1); }
+;
+
+statement:
+      declaration ';'  { $$ = $1; }
+    | assignment ';'   { $$ = $1; }
+    | print_stmt ';'   { $$ = $1; }
+    | while_stmt       { $$ = $1; }
+    | if_stmt          { $$ = $1; }
+    | funcdef          { $$ = $1; }
+    | return_stmt ';'  { $$ = $1; }
+;
+
+if_stmt:
+    IF '(' expression ')' block opt_else { $$ = ast_if($3, $5, $6, yylineno); }
+;
+
+opt_else:
+      /* empty */ { $$ = NULL; }
+    | ELSE block   { $$ = $2; }
+;
+
+return_stmt:
+    RETURN expression { $$ = ast_return($2, yylineno); }
+;
+
+while_stmt:
+    WHILE '(' expression ')' block opt_semi { $$ = ast_while($3, $5, yylineno); }
 ;
 
 declaration:
-    TYPE_INT ID {
-        insert_symbol($2, "int", 0);
-        printf("Declared: %s\n", $2);
+    type_spec ID opt_arr {
+        if ($3) {
+            $$ = ast_decl_array($1->as.num.value, $2, $3->as.num.value, yylineno);
+            ast_free($3);
+        } else {
+            $$ = ast_decl($1->as.num.value, $2, yylineno);
+        }
+        free($1);
     }
+;
+
+opt_arr:
+      /* empty */ { $$ = NULL; }
+    | '[' NUMBER ']' { $$ = ast_num($2, yylineno); }
 ;
 
 assignment:
-    ID ASSIGN expression {
-        if(!exists($1)) {
-            printf("Error: %s not declared\n", $1);
-        } else {
-            set_initialized($1);
-            printf("Assigned: %s\n", $1);
-        }
-    }
+    ID ASSIGN expression { $$ = ast_assign($1, $3, yylineno); }
+  | ID '[' expression ']' ASSIGN expression { $$ = ast_aassign($1, $3, $6, yylineno); }
 ;
 
 print_stmt:
-    PRINT '(' ID ')' {
-        if(!exists($3)) {
-            printf("Error: %s not declared\n", $3);
-        } else {
-            if(is_sensitive($3)) {
-                printf("WARNING: printing sensitive data!\n");
-            }
-            printf("Print: %s\n", $3);
-        }
-    }
+    PRINT '(' expression ')' { $$ = ast_print($3, yylineno); }
 ;
 
 expression:
-      expression PLUS expression
-    | expression MINUS expression
-    | expression MUL expression
-    | expression DIV div_rhs
-    | expression EQ expression
-    | expression NEQ expression
-    | expression GT expression
-    | expression LT expression
-    | expression GTE expression
-    | expression LTE expression
-    | NUMBER
-    | ID
-    | KW_TRUE
-    | KW_FALSE
+      expression PLUS expression { $$ = ast_binop(OP_ADD, $1, $3, yylineno); }
+    | expression MINUS expression { $$ = ast_binop(OP_SUB, $1, $3, yylineno); }
+    | expression MUL expression { $$ = ast_binop(OP_MUL, $1, $3, yylineno); }
+    | expression DIV div_rhs { $$ = ast_binop(OP_DIV, $1, $3, yylineno); }
+    | expression EQ expression { $$ = ast_binop(OP_EQ, $1, $3, yylineno); }
+    | expression NEQ expression { $$ = ast_binop(OP_NEQ, $1, $3, yylineno); }
+    | expression GT expression { $$ = ast_binop(OP_GT, $1, $3, yylineno); }
+    | expression LT expression { $$ = ast_binop(OP_LT, $1, $3, yylineno); }
+    | expression GTE expression { $$ = ast_binop(OP_GTE, $1, $3, yylineno); }
+    | expression LTE expression { $$ = ast_binop(OP_LTE, $1, $3, yylineno); }
+    | primary { $$ = $1; }
+;
+
+primary:
+      NUMBER { $$ = ast_num($1, yylineno); }
+    | BOOL_LIT { $$ = ast_bool($1, yylineno); }
+    | ID { $$ = ast_id($1, yylineno); }
+    | ID '[' expression ']' { $$ = ast_index($1, $3, yylineno); }
+    | CHAR_LIT { $$ = ast_char_from_token($1, yylineno); }
+    | STRING_LIT { $$ = ast_string_from_token($1, yylineno); }
+    | ID '(' opt_args ')' { $$ = ast_call($1, $3, yylineno); }
+    | '(' expression ')' { $$ = $2; }
+;
+
+nonnum_primary:
+      BOOL_LIT { $$ = ast_bool($1, yylineno); }
+    | ID { $$ = ast_id($1, yylineno); }
+    | CHAR_LIT { $$ = ast_char_from_token($1, yylineno); }
+    | STRING_LIT { $$ = ast_string_from_token($1, yylineno); }
+    | ID '(' opt_args ')' { $$ = ast_call($1, $3, yylineno); }
+    | '(' expression ')' { $$ = $2; }
+;
+
+opt_args:
+      /* empty */ { $$ = NULL; }
+    | expression { $$ = list1($1); }
+    | opt_args ',' expression { $$ = list_append($1, $3); }
 ;
 
 div_rhs:
     NUMBER {
         if ($1 == 0) {
-            fprintf(stderr, "Error: division by zero is not possible\n");
+            fprintf(stderr, "Error: division by zero is not possible (line %d)\n", yylineno);
             YYABORT;
         }
+        $$ = ast_num($1, yylineno);
     }
-    | ID
+  | nonnum_primary { $$ = $1; }
 ;
 
 %%
 
 void yyerror(const char *s) {
-    printf("Syntax error: %s\n", s);
+    fprintf(stderr, "Syntax error at line %d: %s\n", yylineno, s);
 }
+
