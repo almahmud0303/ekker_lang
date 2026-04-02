@@ -1,6 +1,9 @@
 start {
     number x;
-    x = 10;
+    decimal y;
+
+    y = 3;
+    x = y;
     show(x);
 }
 

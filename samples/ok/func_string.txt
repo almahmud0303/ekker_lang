@@ -1,0 +1,18 @@
+define number add(number a, number b) {
+    give a + b;
+}
+
+start {
+    number x;
+    letter c;
+    text s;
+
+    x = add(2, 3);
+    c = 'A';
+    s = "hello";
+
+    show(x);
+    show(c);
+    show(s);
+}
+

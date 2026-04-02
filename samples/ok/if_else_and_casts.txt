@@ -1,0 +1,14 @@
+start {
+    number x;
+    decimal y;
+    x = 3;
+    y = x;         /* int -> float implicit cast */
+    x = y;         /* float -> int implicit cast */
+
+    if (true) {
+        show(x);
+    } else {
+        show(y);
+    }
+}
+

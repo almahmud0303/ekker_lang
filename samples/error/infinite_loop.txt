@@ -1,0 +1,6 @@
+start {
+    repeat(true) {
+        show(1);
+    }
+}
+

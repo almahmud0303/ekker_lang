@@ -1,0 +1,4 @@
+start {
+    show(x);
+}
+

@@ -1,0 +1,7 @@
+define number fun1(int n){
+    show(n);
+    give fun1(n+1);
+}
+start{
+    fun1(0)
+}

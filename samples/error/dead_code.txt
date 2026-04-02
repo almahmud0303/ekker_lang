@@ -1,0 +1,10 @@
+define number f() {
+    give 1;
+    show(2);
+    give 3;
+}
+
+start {
+    show(f());
+}
+

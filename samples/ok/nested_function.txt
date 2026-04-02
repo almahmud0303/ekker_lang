@@ -1,0 +1,19 @@
+define number add(number a,number b){
+    give a + b;
+}
+define number inner(number n) {
+       
+        number a;
+        number b;
+        a = 10;
+        b=add(n,a);
+        show(b);
+        give n + 1;
+    }
+
+start {
+
+    number x;
+    x = inner(4);
+    show(x);
+}

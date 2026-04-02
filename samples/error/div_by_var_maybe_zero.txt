@@ -1,0 +1,7 @@
+start {
+    number x;
+    number y;
+    x = 10;
+    show(x / y);  /* y is uninitialized -> "might be 0" warning should show */
+}
+

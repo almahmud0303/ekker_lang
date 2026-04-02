@@ -1,6 +1,5 @@
 start {
     number x;
-    x = 10;
     show(x);
 }
 
