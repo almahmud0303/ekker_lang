@@ -7,6 +7,12 @@ mingw32-make
 
 Optional log file: `.\ekker.exe samples\ok\minimal.txt build.log`
 
+### Declaration syntax (C-style)
+
+- **Optional initializer:** `number i = 10;` (same as `number i;` then `i = 10;`).
+- **Multiple names:** `number a, b;` or mix: `number x = 1, y, z = 3;`
+- **Function parameters** stay single-name only: `define f(number a, number b)` (comma separates parameters, not a shared `number` list).
+
 ## Pipeline (see `doc/INDEX_PDF_CHECKLIST.md`)
 
 1. Token dump (Flex)  
@@ -25,9 +31,9 @@ Run:
 
 `.\ekker.exe samples\ok\constant_folding.txt`
 
-- Step **1c** prints the **AST before** optimization (you still see nested `BINOP` trees for `1+2+3`, etc.).
-- Step **3c** runs **constant folding** on that AST (see `optimize.c`).
-- Steps **4** and **4b** show **IR** and **stack code** after folding: pure constant expressions become a **single** literal (e.g. `t? = 10` for `2*3+4`, not three temps and two adds).
+- Step **1c** prints the **AST before** optimization (nested `BINOP` trees for `1+2+3`, etc.).
+- Step **3c** runs **constant folding** (see `optimize.c`); step **3d** prints the **AST again** so folded constants show up as **`NUM` / `BOOL`** nodes.
+- Steps **4** and **4b** show **IR** and **stack code** after folding: pure constant expressions become a **single** literal (e.g. `t? = 10` for `2*3+4`).
 
 Details: `doc/OPTIMIZATION.md` (short explanation).
 

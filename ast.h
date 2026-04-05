@@ -86,6 +86,7 @@ struct Ast {
 /* list helpers */
 AstList *list1(Ast *n);
 AstList *list_append(AstList *xs, Ast *n);
+AstList *list_append_list(AstList *a, AstList *b);
 
 /* node constructors */
 Ast *ast_decl(Type t, char *name, int line);

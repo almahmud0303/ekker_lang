@@ -25,6 +25,15 @@ AstList *list_append(AstList *xs, Ast *n) {
     return xs;
 }
 
+AstList *list_append_list(AstList *a, AstList *b) {
+    if (!a) return b;
+    if (!b) return a;
+    AstList *p = a;
+    while (p->next) p = p->next;
+    p->next = b;
+    return a;
+}
+
 Ast *ast_decl(Type t, char *name, int line) {
     return ast_decl_array(t, name, 0, line);
 }

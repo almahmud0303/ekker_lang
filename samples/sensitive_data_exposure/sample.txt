@@ -1,3 +1,6 @@
-number password;
-password = 1;
-show(password);
+start{
+    number password;
+    password = 1;
+    show(password);
+
+}

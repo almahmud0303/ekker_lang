@@ -559,6 +559,8 @@ int main(int argc, char **argv) {
 
     step("3c) Optimization (constant folding on AST)");
     optimize_fold_program(g_top, g_start);
+    step("3d) AST dump (after optimization, folded constants visible)");
+    astlist_dump(g_top, 0);
 
     step("4) 3-Address Code (IR) - full program");
     ir_emit_program(g_top, g_start);

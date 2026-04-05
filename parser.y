@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ast.h"
 
 void yyerror(const char *s);
@@ -9,6 +10,8 @@ extern int yylineno;
 
 AstList *g_top = NULL;  /* list of top-level items: funcdefs and start-block statements */
 AstList *g_start = NULL;/* statements inside start */
+
+static Type g_decl_type; /* set before parsing init_declarator_list */
 %}
 
 %code requires {
@@ -37,8 +40,8 @@ AstList *g_start = NULL;/* statements inside start */
 %token <str> CHAR_LIT
 %token <str> STRING_LIT
 
-%type <list> toplevel_list statements opt_params opt_args
-%type <node> toplevel_item funcdef start_block statement declaration assignment print_stmt while_stmt if_stmt opt_else block return_stmt
+%type <list> toplevel_list statements opt_params opt_args init_declarator_list init_declarator
+%type <node> toplevel_item funcdef start_block statement decl_statement param_declaration assignment print_stmt while_stmt if_stmt opt_else block return_stmt
 %type <node> expression primary nonnum_primary div_rhs opt_arr
 %type <node> type_spec
 
@@ -79,8 +82,8 @@ funcdef:
 
 opt_params:
       /* empty */ { $$ = NULL; }
-    | declaration             { $$ = list1($1); }
-    | opt_params ',' declaration { $$ = list_append($1, $3); }
+    | param_declaration             { $$ = list1($1); }
+    | opt_params ',' param_declaration { $$ = list_append($1, $3); }
 ;
 
 type_spec:
@@ -106,7 +109,7 @@ statements:
 ;
 
 statement:
-      declaration ';'  { $$ = $1; }
+      decl_statement ';'  { $$ = $1; }
     | assignment ';'   { $$ = $1; }
     | print_stmt ';'   { $$ = $1; }
     | while_stmt       { $$ = $1; }
@@ -132,7 +135,8 @@ while_stmt:
     WHILE '(' expression ')' block opt_semi { $$ = ast_while($3, $5, yylineno); }
 ;
 
-declaration:
+/* Function parameters: single declarator, no comma list, no '=' initializer */
+param_declaration:
     type_spec ID opt_arr {
         if ($3) {
             $$ = ast_decl_array($1->as.num.value, $2, $3->as.num.value, yylineno);
@@ -140,8 +144,39 @@ declaration:
         } else {
             $$ = ast_decl($1->as.num.value, $2, yylineno);
         }
-        free($1);
+        ast_free($1);
     }
+;
+
+/* Statements: number a, b;  or  number i = 10;  (wrapped in BLOCK for the stmt list) */
+decl_statement:
+    type_spec
+        { g_decl_type = $1->as.num.value; }
+    init_declarator_list
+        {
+            $$ = ast_block($3, yylineno);
+            ast_free($1);
+        }
+;
+
+init_declarator_list:
+      init_declarator { $$ = $1; }
+    | init_declarator_list ',' init_declarator { $$ = list_append_list($1, $3); }
+;
+
+init_declarator:
+      ID ASSIGN expression {
+            AstList *xs = list1(ast_decl(g_decl_type, $1, yylineno));
+            $$ = list_append(xs, ast_assign(strdup($1), $3, yylineno));
+        }
+    | ID opt_arr {
+            if ($2) {
+                $$ = list1(ast_decl_array(g_decl_type, $1, $2->as.num.value, yylineno));
+                ast_free($2);
+            } else {
+                $$ = list1(ast_decl(g_decl_type, $1, yylineno));
+            }
+        }
 ;
 
 opt_arr:

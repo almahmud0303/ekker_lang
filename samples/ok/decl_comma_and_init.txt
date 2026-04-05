@@ -1,0 +1,7 @@
+start {
+  number i = 10;
+  number a, b;
+  a = 1;
+  b = 2;
+  show(i + a + b);
+}
