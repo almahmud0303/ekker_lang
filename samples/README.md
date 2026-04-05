@@ -1,24 +1,46 @@
-# Samples (aligned with *Compiler Design Project Idea.pdf*)
-
-Use these files to **manually** (or later with a script) run your compiler and check behavior as you implement each feature.
+# Samples
 
 ```text
 mingw32-make
-.\ekker.exe samples\<folder>\sample.txt
+.\ekker.exe samples\<folder>\<file>.txt
 ```
 
-**Current grammar** (see `parser.y`) allows only: `number id;`, `id = expression;`, `show(id);`, and integer expressions with `+ - * /`.
+Optional log file: `.\ekker.exe samples\ok\minimal.txt build.log`
 
-| Idea PDF theme | Folder | In this repo |
-|----------------|--------|----------------|
-| Baseline / happy path | `ok/` | Runnable today |
-| Uninitialized variables | `uninitialized_variable/` | Sample parses; **warning** needs semantic pass |
-| Sensitive data exposure | `sensitive_data_exposure/` | Sample parses; **warning** needs marking vars / names in symtab |
-| Division by zero risk | `division_by_zero/` | Parses; **check** needs constant/eval pass |
-| Infinite loop detection | `future_from_proposal/` | Syntax not in `parser.y` yet — target program documented there |
-| Array index out-of-bounds | `future_from_proposal/` | Same |
-| Dead code after return | `future_from_proposal/` | Same |
-| Type / mismatch detection | `future_from_proposal/` | Same |
-| Undeclared use (baseline errors) | `undeclared_errors/` | Runnable; your parser already reports some errors |
+## Pipeline (see `doc/INDEX_PDF_CHECKLIST.md`)
 
-As you add `repeat`, `check`/`otherwise`, `give`, arrays, etc., move or duplicate examples from `future_from_proposal/` into their own folders and mark them runnable in the table above.
+1. Token dump (Flex)  
+2. Parse → AST  
+3. Symbol table collection  
+4. Type checking + security warnings/errors  
+5. Dead-code warnings  
+6. **Constant folding** (AST)  
+7. **3-address IR** for all `define` functions + `start`  
+8. **Stack-machine code generation**  
+9. Symbol table print  
+
+## Constant folding (optimization) demo
+
+Run:
+
+`.\ekker.exe samples\ok\constant_folding.txt`
+
+- Step **1c** prints the **AST before** optimization (you still see nested `BINOP` trees for `1+2+3`, etc.).
+- Step **3c** runs **constant folding** on that AST (see `optimize.c`).
+- Steps **4** and **4b** show **IR** and **stack code** after folding: pure constant expressions become a **single** literal (e.g. `t? = 10` for `2*3+4`, not three temps and two adds).
+
+Details: `doc/OPTIMIZATION.md` (short explanation).
+
+## Folders
+
+| Folder | Purpose |
+|--------|---------|
+| `ok/` | Happy-path programs (includes `constant_folding.txt`) |
+| `loop/` | `repeat` loops |
+| `division_by_zero/` | Parse-time `/ 0` |
+| `sensitive_data_exposure/` | Sensitive `show` warning |
+| `uninitialized_variable/` | Uninit use warning |
+| `undeclared_errors/` | Undeclared id errors |
+| `error/` | OOB arrays, dead code, type mismatch, infinite loop hints, etc. |
+
+Invalid source (e.g. `@`) triggers a **lexical error** and `INVALID_CHAR` so the parser fails with a syntax error.

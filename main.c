@@ -8,6 +8,8 @@
 #include "symtab.h"
 #include "types.h"
 #include "ir.h"
+#include "optimize.h"
+#include "codegen.h"
 
 extern FILE *yyin;
 int yylex(void);
@@ -555,8 +557,14 @@ int main(int argc, char **argv) {
     step("3b) Dead code detection");
     for (AstList *p = g_top; p; p = p->next) pass_deadcode_stmt(p->node);
 
-    step("4) 3-Address Code (IR)");
-    ir_emit(g_start);
+    step("3c) Optimization (constant folding on AST)");
+    optimize_fold_program(g_top, g_start);
+
+    step("4) 3-Address Code (IR) - full program");
+    ir_emit_program(g_top, g_start);
+
+    step("4b) Code generation (stack-machine target)");
+    codegen_emit_program(g_top, g_start);
 
     step("5) Print Symbol Table");
     symtab_print();

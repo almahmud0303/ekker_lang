@@ -1,0 +1,8 @@
+start {
+  number x;
+  number y;
+  x = 1 + 2 + 3;
+  y = 8 * 5;
+  show(2 * 3 + 4);
+  show(x + y);
+}

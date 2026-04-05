@@ -164,3 +164,17 @@ void ir_emit(AstList *top) {
     for (AstList *p = top; p; p = p->next) emit_stmt(&c, p->node);
 }
 
+void ir_emit_program(AstList *g_top, AstList *g_start) {
+    IrCtx c = {0};
+    printf("\n== 3-Address Code (full program) ==\n");
+    for (AstList *p = g_top; p; p = p->next) {
+        Ast *n = p->node;
+        if (!n || n->kind != AST_FUNCDEF) continue;
+        printf("\n-- function %s --\n", n->as.funcdef.name);
+        emit_stmt(&c, n->as.funcdef.body);
+    }
+    printf("\n-- start (main) --\n");
+    for (AstList *p = g_start; p; p = p->next)
+        emit_stmt(&c, p->node);
+}
+

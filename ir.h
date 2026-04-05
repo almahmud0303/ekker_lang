@@ -10,5 +10,8 @@ typedef struct {
 
 void ir_emit(AstList *top_level_stmts);
 
+/* Emit IR for every define'd function, then the start block (main). */
+void ir_emit_program(AstList *g_top, AstList *g_start);
+
 #endif
 

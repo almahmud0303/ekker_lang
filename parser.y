@@ -25,6 +25,7 @@ AstList *g_start = NULL;/* statements inside start */
 %token TOK_TYPE_INT TOK_TYPE_FLOAT TOK_TYPE_CHAR TOK_TYPE_STRING
 %token PRINT WHILE RETURN DEFINE START IF ELSE
 %token SENSITIVE
+%token INVALID_CHAR
 
 %token PLUS MINUS MUL DIV
 %token ASSIGN

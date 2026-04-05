@@ -9,7 +9,7 @@ TARGET = ekker
 all:
 	$(BISON) -d -o parser.tab.c parser.y
 	$(FLEX) scanner.l
-	$(CC) $(CFLAGS) lex.yy.c parser.tab.c ast.c symtab.c ir.c main.c -o $(TARGET)
+	$(CC) $(CFLAGS) lex.yy.c parser.tab.c ast.c symtab.c ir.c optimize.c codegen.c main.c -o $(TARGET)
 
 run:
 	./$(TARGET) sample.txt

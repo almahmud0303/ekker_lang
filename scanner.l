@@ -80,7 +80,9 @@ CHAR       \'([^\'\\n]|\\.)\'
 \/\*([^*]|\*+[^*/])*\*+\/   ;
 
 . {
-    fprintf(stderr, "Invalid character: %s at line %d\n", yytext, yylineno);
+    fprintf(stderr, "Lexical error: invalid character '%c' (0x%02x) at line %d\n",
+            yytext[0] ? yytext[0] : '?', (unsigned char)yytext[0], yylineno);
+    return INVALID_CHAR;
 }
 
 %%

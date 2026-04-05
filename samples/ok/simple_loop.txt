@@ -1,0 +1,9 @@
+start{
+        number i;
+    i=0;
+    repeat(i<5)
+    {
+        show(i);
+        i=i+1;
+    }
+}
