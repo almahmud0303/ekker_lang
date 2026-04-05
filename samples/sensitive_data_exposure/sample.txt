@@ -1,3 +1,0 @@
-number password;
-password = 1;
-show(password);
