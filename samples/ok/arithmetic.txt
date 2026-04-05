@@ -1,3 +1,4 @@
+// hello
 start{
     number a;
     number b;
