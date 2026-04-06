@@ -1,0 +1,11 @@
+start{
+    number i;
+    number x;
+    i=5;
+    x=100/i;
+    show(x);
+
+    i=10;
+    x=100/i;
+    show(x);
+}
