@@ -1,0 +1,17 @@
+== Stack-machine code (code generation) ==
+
+proc __start
+    decl a
+    decl b
+    push 3
+    store b
+    load a
+    load b
+    push 4
+    mul
+    add
+    store a
+    load a
+    syscall print
+    halt
+endproc

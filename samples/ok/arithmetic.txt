@@ -2,7 +2,6 @@
 start{
     number a;
     number b;
-    a = 2;
     b = 3;
     a = a + b * 4;
     show(a);
