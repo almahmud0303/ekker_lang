@@ -354,7 +354,21 @@ static Type typecheck_expr(Ast *e) {
                 if (sz > 0 && (idx < 0 || idx >= sz))
                     fprintf(stderr, "Error: array index out of bounds '%s[%d]' (size %d) (line %d)\n",
                             e->as.index.name, idx, sz, e->line);
-            } else {
+            } else if (e->as.index.index && e->as.index.index->kind == AST_ID) {
+                Type ct;
+                double cv;
+                if (symtab_try_get_const(e->as.index.index->as.id.name, &ct, &cv) && ct == TYPE_INT) {
+                    int idx = (int)cv;
+                    int sz = symtab_array_size(e->as.index.name);
+                    if (sz > 0 && (idx < 0 || idx >= sz))
+                        fprintf(stderr, "Error: array index out of bounds '%s[%d]' (size %d) (line %d)\n",
+                                e->as.index.name, idx, sz, e->line);
+                } else {
+                    /* Non-constant index: keep info so IR can emit a runtime bounds check. */
+                    int sz = symtab_array_size(e->as.index.name);
+                    e->as.index.index = ast_boundschk(e->as.index.name, e->as.index.index, sz, e->line);
+                }
+            } else if (e->as.index.index) {
                 /* Non-constant index: keep info so IR can emit a runtime bounds check. */
                 int sz = symtab_array_size(e->as.index.name);
                 e->as.index.index = ast_boundschk(e->as.index.name, e->as.index.index, sz, e->line);
@@ -548,6 +562,11 @@ int main(int argc, char **argv) {
     step("2) Symbol Table build (collect declarations)");
     pass_collect(g_top);
 
+    step("3c) Optimization (constant folding on AST)");
+    optimize_fold_program(g_top, g_start);
+    step("3d) AST dump (after optimization, folded constants visible)");
+    astlist_dump(g_top, 0);
+
     step("3) Type checking (warnings/errors)");
     pass_typecheck_top(g_top);
 
@@ -556,11 +575,6 @@ int main(int argc, char **argv) {
 
     step("3b) Dead code detection");
     for (AstList *p = g_top; p; p = p->next) pass_deadcode_stmt(p->node);
-
-    step("3c) Optimization (constant folding on AST)");
-    optimize_fold_program(g_top, g_start);
-    step("3d) AST dump (after optimization, folded constants visible)");
-    astlist_dump(g_top, 0);
 
     step("4) 3-Address Code (IR) - full program");
     ir_emit_program(g_top, g_start);

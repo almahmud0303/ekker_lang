@@ -52,11 +52,11 @@ static Type g_decl_type; /* set before parsing init_declarator_list */
 %%
 
 program:
-    toplevel_list { g_top = $1; }
+    toplevel_list { g_top = $1; }  //$1-> value of the first symbol
 ;
 
 toplevel_list:
-      toplevel_list toplevel_item { $$ = list_append($1, $2); }
+      toplevel_list toplevel_item { $$ = list_append($1, $2); } 
     | toplevel_item               { $$ = list1($1); }
 ;
 
@@ -68,24 +68,24 @@ toplevel_item:
 start_block:
     START block opt_semi {
         /* store start statements for main pipeline */
-        if ($2 && $2->kind == AST_BLOCK) g_start = $2->as.block.stmts;
+        if ($2 && $2->kind == AST_BLOCK) g_start = $2->as.block.stmts;//$2->the block
         $$ = $2;
     }
 ;
-
+//function defination
 funcdef:
     DEFINE type_spec ID '(' opt_params ')' block opt_semi {
         $$ = ast_funcdef($2->as.num.value, $3, $5, $7, yylineno);
-        free($2);
+        free($2);// free the AST
     }
 ;
-
+//function parameters
 opt_params:
       /* empty */ { $$ = NULL; }
     | param_declaration             { $$ = list1($1); }
     | opt_params ',' param_declaration { $$ = list_append($1, $3); }
 ;
-
+//token for data type
 type_spec:
     TOK_TYPE_INT    { $$ = ast_num(TYPE_INT, yylineno); }
   | TOK_TYPE_FLOAT  { $$ = ast_num(TYPE_FLOAT, yylineno); }
@@ -102,7 +102,7 @@ block:
     '{' statements '}' { $$ = ast_block($2, yylineno); }
   | '{' '}'            { $$ = ast_block(NULL, yylineno); }
 ;
-
+//main works are here
 statements:
       statements statement { $$ = list_append($1, $2); }
     | statement            { $$ = list1($1); }
@@ -117,7 +117,7 @@ statement:
     | funcdef          { $$ = $1; }
     | return_stmt ';'  { $$ = $1; }
 ;
-
+//if else statement
 if_stmt:
     IF '(' expression ')' block opt_else { $$ = ast_if($3, $5, $6, yylineno); }
 ;
@@ -126,11 +126,11 @@ opt_else:
       /* empty */ { $$ = NULL; }
     | ELSE block   { $$ = $2; }
 ;
-
+//return statement
 return_stmt:
     RETURN expression { $$ = ast_return($2, yylineno); }
 ;
-
+//while statement
 while_stmt:
     WHILE '(' expression ')' block opt_semi { $$ = ast_while($3, $5, yylineno); }
 ;
@@ -178,12 +178,12 @@ init_declarator:
             }
         }
 ;
-
+// for array
 opt_arr:
       /* empty */ { $$ = NULL; }
     | '[' NUMBER ']' { $$ = ast_num($2, yylineno); }
 ;
-
+//for assignment
 assignment:
     ID ASSIGN expression { $$ = ast_assign($1, $3, yylineno); }
   | ID '[' expression ']' ASSIGN expression { $$ = ast_aassign($1, $3, $6, yylineno); }
@@ -192,7 +192,7 @@ assignment:
 print_stmt:
     PRINT '(' expression ')' { $$ = ast_print($3, yylineno); }
 ;
-
+//arithmetic expression
 expression:
       expression PLUS expression { $$ = ast_binop(OP_ADD, $1, $3, yylineno); }
     | expression MINUS expression { $$ = ast_binop(OP_SUB, $1, $3, yylineno); }
@@ -217,7 +217,7 @@ primary:
     | ID '(' opt_args ')' { $$ = ast_call($1, $3, yylineno); }
     | '(' expression ')' { $$ = $2; }
 ;
-
+//expression that are not number
 nonnum_primary:
       BOOL_LIT { $$ = ast_bool($1, yylineno); }
     | ID { $$ = ast_id($1, yylineno); }
@@ -232,7 +232,7 @@ opt_args:
     | expression { $$ = list1($1); }
     | opt_args ',' expression { $$ = list_append($1, $3); }
 ;
-
+//division by 0 error
 div_rhs:
     NUMBER {
         if ($1 == 0) {
