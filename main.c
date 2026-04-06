@@ -217,6 +217,24 @@ static void typecheck_stmt(Ast *s, Type current_ret) {
                 if (sz > 0 && (idx < 0 || idx >= sz))
                     fprintf(stderr, "Error: array index out of bounds '%s[%d]' (size %d) (line %d)\n",
                             s->as.aassign.name, idx, sz, s->line);
+            } else if (s->as.aassign.index && s->as.aassign.index->kind == AST_ID) {
+                Type ct;
+                double cv;
+                if (symtab_try_get_const(s->as.aassign.index->as.id.name, &ct, &cv) && ct == TYPE_INT) {
+                    int idx = (int)cv;
+                    int sz = symtab_array_size(s->as.aassign.name);
+                    if (sz > 0 && (idx < 0 || idx >= sz))
+                        fprintf(stderr, "Error: array index out of bounds '%s[%d]' (size %d) (line %d)\n",
+                                s->as.aassign.name, idx, sz, s->line);
+                } else {
+                    /* Non-constant index: wrap with bounds check. */
+                    int sz = symtab_array_size(s->as.aassign.name);
+                    s->as.aassign.index = ast_boundschk(s->as.aassign.name, s->as.aassign.index, sz, s->line);
+                }
+            } else if (s->as.aassign.index) {
+                /* Non-constant index: wrap with bounds check. */
+                int sz = symtab_array_size(s->as.aassign.name);
+                s->as.aassign.index = ast_boundschk(s->as.aassign.name, s->as.aassign.index, sz, s->line);
             }
 
             Ast *rhs_expr = s->as.aassign.expr;
