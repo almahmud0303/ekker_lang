@@ -1,6 +1,5 @@
 start{
     number password;
-    password = 1;
+    password=1;
     show(password);
-
 }

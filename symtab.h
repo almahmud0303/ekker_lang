@@ -12,7 +12,7 @@ int symtab_declare_array(const char *name, Type elem, int arr_size, int sensitiv
 int symtab_declare_func(const char *name, Type ret, AstList *params, int line);
 
 int symtab_exists(const char *name);
-SymKind symtab_kindof(const char *name);
+SymKind symtab_kindof(const char *name); //is it variable or function
 Type symtab_typeof(const char *name); /* var type or func return type; TYPE_UNKNOWN if missing */
 int symtab_is_array(const char *name);
 int symtab_array_size(const char *name); /* -1 if missing/not array */
